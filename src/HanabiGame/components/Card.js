@@ -3,7 +3,7 @@ import styles from "HanabiGame/components/Card.module.css";
 
 const Card = ({ color, number }) => {
   return (
-    <div className={styles.card} style={{ backgroundColor: `${color}` }}>
+    <div className={styles.card} style={{ background: `${color}` }}>
       {number}
     </div>
   );

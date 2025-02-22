@@ -11,6 +11,8 @@ const cardColors = {
   GREEN: "GREEN",
   BLUE: "BLUE",
   WHITE: "WHITE",
+  // RAINBOW:
+  // "linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet)",
 };
 const numberFrequencies = {
   1: 3,
