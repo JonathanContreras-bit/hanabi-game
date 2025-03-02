@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import Card from "HanabiGame/components/Card";
 import CardRow from "HanabiGame/components/CardRow";
 import Player from "HanabiGame/components/Player";
 import styles from "HanabiGame/components/Gameboard.module.css";
+import TimeTokensSection from "HanabiGame/components/TimeTokensSection";
+import ExplosionSection from "HanabiGame/components/ExplosionSection";
 
-// GAME CONFIGS
+// #region GAME CONFIGS
 const cardColors = {
   RED: "RED",
   YELLOW: "YELLOW",
@@ -22,8 +23,11 @@ const numberFrequencies = {
   5: 1,
 };
 const playWithRainbowInd = false;
+const timeTokensNum = 8;
 const playerNames = ["Jonny", "Marcel", "Elisa"];
+//#endregion
 
+// #region Stateless functions
 const createCard = (inpColor, inpNumber, freqI) => {
   return {
     id: `${inpColor}-${inpNumber}-${freqI}`,
@@ -56,13 +60,20 @@ const shuffleArray = (arr) => {
   }
   return arr;
 };
+//#endregion
 
 const Gameboard = () => {
+  //#region component state
   const [_allCards, set_allCards] = useState(visualizeAllCards());
+  const [_debugMode, set_debugMode] = useState(false);
   const [players, setPlayers] = useState(initializePlayers(playerNames));
   const [drawStack, setDrawStack] = useState(shuffleArray(_allCards.flat()));
-  const [playerTurn, setPlayerTurn] = useState(0);
+  const [playerTurn, setPlayerTurn] = useState(-1);
+  const [timeTokenCount, setTimeTokensCount] = useState(timeTokensNum);
+  const [explosionCount, setExplosionCount] = useState(0);
+  //#endregion
 
+  //#region state-changing helper functions
   const drawNCards = (n) => {
     const widthdrawnCards = drawStack.slice(-n);
     // remove from DrawStack
@@ -73,7 +84,7 @@ const Gameboard = () => {
         prevStack.filter(
           (card) =>
             !widthdrawnCards.some(
-              (widthdrawnCard) => widthdrawnCard.id == card.id
+              (widthdrawnCard) => widthdrawnCard.id === card.id
             )
         )
       )
@@ -86,7 +97,7 @@ const Gameboard = () => {
   };
 
   const handleStart = () => {
-    const cardsPerPlayer = 5; // parametrize based on players length
+    const cardsPerPlayer = players.length < 4 ? 5 : 4;
 
     const drawnCards = drawNCards(players.length * cardsPerPlayer);
     setPlayers((prevPlayers) => {
@@ -100,19 +111,34 @@ const Gameboard = () => {
     });
     nextPlayerTurn();
   };
+  //#endregion
 
   return (
     <div>
-      {_allCards.map((stack) => {
-        return <CardRow cards={stack} />;
-      })}
       <div className={styles.playersSection}>
-        {players.map((player) => (
-          <Player name={player.name} cards={player.cards} />
+        {players.map((player, index) => (
+          <Player
+            name={player.name}
+            cards={player.cards}
+            _myturn={playerTurn === index}
+          />
         ))}
       </div>
-      <button hidden={playerTurn !== 0} onClick={handleStart}>
+      <button hidden={playerTurn >= 0} onClick={handleStart}>
         Start
+      </button>
+      <TimeTokensSection timeTokenCount={timeTokenCount} />
+      <ExplosionSection explosionCount={explosionCount} />
+      {_debugMode &&
+        _allCards.map((stack) => {
+          return <CardRow cards={stack} />;
+        })}
+      <button
+        onClick={() => {
+          set_debugMode((prev) => !prev);
+        }}
+      >
+        Toggle Debug Mode
       </button>
     </div>
   );
