@@ -1,5 +1,8 @@
-.playersSection {
+.gameboard {
   display: flex;
-  flex-direction: row;
-  justify-content: space-around;
+  flex-direction: column;
+}
+
+.gameboard button {
+  width: fit-content;
 }

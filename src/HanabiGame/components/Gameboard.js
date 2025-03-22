@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import CardRow from "HanabiGame/components/CardRow";
-import Player from "HanabiGame/components/Player";
+import PlayersSection from "HanabiGame/components/PlayersSection";
 import styles from "HanabiGame/components/Gameboard.module.css";
 import TimeTokensSection from "HanabiGame/components/TimeTokensSection";
 import ExplosionSection from "HanabiGame/components/ExplosionSection";
@@ -15,6 +15,7 @@ const cardColors = {
   // RAINBOW:
   // "linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet)",
 };
+const defaultUnknownCardColor = "grey";
 const numberFrequencies = {
   1: 3,
   2: 2,
@@ -33,6 +34,8 @@ const createCard = (inpColor, inpNumber, freqI) => {
     id: `${inpColor}-${inpNumber}-${freqI}`,
     color: inpColor,
     number: inpNumber,
+    believedColor: defaultUnknownCardColor,
+    believedNumber: 0,
   };
 };
 const createPlayer = (inpName, inpCards) => {
@@ -60,6 +63,22 @@ const shuffleArray = (arr) => {
   }
   return arr;
 };
+
+const computeDecision = (
+  myCards,
+  orderedOtherPlayersCards,
+  playedCards,
+  discardedCards
+) => {
+  const believedColorsInHand = myCards.map((card) => {
+    if (card.believedColor || card.believedNumber) {
+      const { believedColor, believedNumber } = card;
+      return { believedColor, believedNumber };
+    }
+    return {};
+  });
+  console.log(`What do I know about my hand? ${believedColorsInHand}`);
+};
 //#endregion
 
 const Gameboard = () => {
@@ -71,6 +90,8 @@ const Gameboard = () => {
   const [playerTurn, setPlayerTurn] = useState(-1);
   const [timeTokenCount, setTimeTokensCount] = useState(timeTokensNum);
   const [explosionCount, setExplosionCount] = useState(0);
+  const [playedCards, setPlayedCards] = useState([]);
+  const [discardedCards, setDiscardedCards] = useState([]);
   //#endregion
 
   //#region state-changing helper functions
@@ -114,24 +135,29 @@ const Gameboard = () => {
   //#endregion
 
   return (
-    <div>
-      <div className={styles.playersSection}>
-        {players.map((player, index) => (
-          <Player
-            name={player.name}
-            cards={player.cards}
-            _myturn={playerTurn === index}
-          />
-        ))}
-      </div>
+    <div className={styles.gameboard}>
+      <PlayersSection players={players} playerTurn={playerTurn} />
       <button hidden={playerTurn >= 0} onClick={handleStart}>
         Start
+      </button>
+      <button
+        hidden={playerTurn < 0}
+        onClick={() => {
+          computeDecision(
+            players[playerTurn].cards,
+            [...players.slice(playerTurn + 1), ...players.slice(0, playerTurn)],
+            playedCards,
+            discardedCards
+          );
+        }}
+      >
+        Compute Decision
       </button>
       <TimeTokensSection timeTokenCount={timeTokenCount} />
       <ExplosionSection explosionCount={explosionCount} />
       {_debugMode &&
         _allCards.map((stack) => {
-          return <CardRow cards={stack} />;
+          return <CardRow cards={stack} _myturn={false} />;
         })}
       <button
         onClick={() => {
