@@ -7,6 +7,13 @@ const Player = ({ name, cards, _myturn }) => {
     <div className={styles.player}>
       <p style={{ color: _myturn && "red" }}>{name}</p>
       <CardRow cards={cards} _myturn={_myturn} />
+      {_myturn && (
+        <div className={styles.actions}>
+          <button>Play</button>
+          <button>Discard</button>
+          <button>Communicate</button>
+        </div>
+      )}
     </div>
   );
 };

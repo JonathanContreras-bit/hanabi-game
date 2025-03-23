@@ -179,16 +179,9 @@ const Gameboard = () => {
   };
 
   const playCard = (playerIndex, cardToPlayId) => {
-    const [[cardToPlay], remainingCards] = players[playerIndex].cards.reduce(
-      ([match, notMatch], card) => {
-        if (card.id === cardToPlayId) {
-          match.push(card);
-        } else {
-          notMatch.push(card);
-        }
-        return [match, notMatch];
-      },
-      [[], []] // Initialize the two arrays
+    const [[cardToPlay], remainingCards] = extractCardFromPlayer(
+      playerIndex,
+      cardToPlayId
     );
 
     const lastNumberInPlayedStack =
@@ -196,7 +189,7 @@ const Gameboard = () => {
         ? playedCards[cardToPlay.color].at(-1)
         : 0;
     if (lastNumberInPlayedStack === cardToPlay.number - 1) {
-      // VALID PLAYABLE CARD
+      // PLAY THE CARD
       setPlayedCards((prevPlayedCardsObj) => {
         return {
           ...prevPlayedCardsObj,
@@ -208,18 +201,61 @@ const Gameboard = () => {
       });
 
       // DROP CARD FROM PLAYER HAND
-      setPlayers((prevPlayers) =>
-        prevPlayers.map((player, index) =>
-          index === playerIndex ? { ...player, cards: remainingCards } : player
-        )
-      );
+      setPlayerIndexCards(playerIndex, remainingCards);
 
       // DRAW NEW CARD FOR PLAYER
       drawCardForPlayer(playerIndex);
     } else {
       // INVALID NON-PLAYABLE CARD :(
-      throwNotImplementedException();
+      setExplosionCount((prev) => prev + 1);
     }
+  };
+
+  const extractCardFromPlayer = (playerIndex, cardToMatchId) => {
+    // return type --> [[matchingCard], remainingCardsArray]
+    return players[playerIndex].cards.reduce(
+      ([match, notMatch], card) => {
+        if (card.id === cardToMatchId) {
+          match.push(card);
+        } else {
+          notMatch.push(card);
+        }
+        return [match, notMatch];
+      },
+      [[], []] // Initialize the two arrays
+    );
+  };
+
+  const discardCard = (playerIndex, cardToDiscardId) => {
+    const [[cardToDiscard], remainingCards] = extractCardFromPlayer(
+      playerIndex,
+      cardToDiscardId
+    );
+
+    // UPDATE DISCARD PILE
+    setDiscardedCards((prevDiscardedObj) => {
+      return {
+        ...prevDiscardedObj,
+        [cardToDiscard.number]: [
+          ...prevDiscardedObj[cardToDiscard.number],
+          cardToDiscard.color,
+        ],
+      };
+    });
+
+    // DROP CARD FROM PLAYER HAND
+    setPlayerIndexCards(playerIndex, remainingCards);
+
+    // DRAW NEW CARD FOR PLAYER
+    drawCardForPlayer(playerIndex);
+  };
+
+  const setPlayerIndexCards = (playerIndex, playersCards) => {
+    setPlayers((prevPlayers) =>
+      prevPlayers.map((player, index) =>
+        index === playerIndex ? { ...player, cards: playersCards } : player
+      )
+    );
   };
   //#endregion
 
