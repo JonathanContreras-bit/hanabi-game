@@ -13,7 +13,7 @@ const cardColors = {
   BLUE: "BLUE",
   WHITE: "WHITE",
   // RAINBOW:
-  // "linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet)",
+  //   "linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet)",
 };
 const defaultUnknownCardColor = "grey";
 const numberFrequencies = {
@@ -64,34 +64,67 @@ const shuffleArray = (arr) => {
   return arr;
 };
 
+const initializePlayedCards = () =>
+  Object.values(cardColors).reduce((acc, value) => {
+    acc[value] = [];
+    return acc;
+  }, {});
+
+const initializeDiscardedCards = () =>
+  Object.keys(numberFrequencies).reduce((acc, number) => {
+    acc[number] = [];
+    return acc;
+  }, {});
+
 const computeDecision = (
   myCards,
   orderedOtherPlayersCards,
   playedCards,
   discardedCards
 ) => {
-  const believedColorsInHand = myCards.map((card) => {
-    if (card.believedColor || card.believedNumber) {
-      const { believedColor, believedNumber } = card;
-      return { believedColor, believedNumber };
+  const believedInformationInHand = myCards.map((card) => {
+    let believedCardColor = "";
+    let believedCardNumber = "";
+
+    if (card.believedColor !== defaultUnknownCardColor) {
+      const { believedColor } = card;
+      believedCardColor = believedColor;
     }
-    return {};
+    if (card.believedNumber) {
+      const { believedNumber } = card;
+      believedCardNumber = believedNumber;
+    }
+    return believedCardColor || believedCardNumber
+      ? { believedCardColor, believedCardNumber }
+      : {};
   });
-  console.log(`What do I know about my hand? ${believedColorsInHand}`);
+  console.log(
+    `What do I know about my hand? ${JSON.stringify(believedInformationInHand)}`
+  );
+};
+
+const throwNotImplementedException = () => {
+  throw new Error(
+    "NotImplementedException: This functionality is not yet implemented."
+  );
 };
 //#endregion
 
 const Gameboard = () => {
   //#region component state
-  const [_allCards, set_allCards] = useState(visualizeAllCards());
+  const [_allCards, set_allCards] = useState(() => visualizeAllCards());
   const [_debugMode, set_debugMode] = useState(false);
-  const [players, setPlayers] = useState(initializePlayers(playerNames));
-  const [drawStack, setDrawStack] = useState(shuffleArray(_allCards.flat()));
+  const [players, setPlayers] = useState(() => initializePlayers(playerNames));
+  const [drawStack, setDrawStack] = useState(() =>
+    shuffleArray(_allCards.flat())
+  );
   const [playerTurn, setPlayerTurn] = useState(-1);
   const [timeTokenCount, setTimeTokensCount] = useState(timeTokensNum);
   const [explosionCount, setExplosionCount] = useState(0);
-  const [playedCards, setPlayedCards] = useState([]);
-  const [discardedCards, setDiscardedCards] = useState([]);
+  const [playedCards, setPlayedCards] = useState(() => initializePlayedCards());
+  const [discardedCards, setDiscardedCards] = useState(() =>
+    initializeDiscardedCards()
+  );
   //#endregion
 
   //#region state-changing helper functions
@@ -131,6 +164,62 @@ const Gameboard = () => {
       });
     });
     nextPlayerTurn();
+  };
+
+  const drawCardForPlayer = (playerIndex) => {
+    const [drawnCard] = drawNCards(1);
+    setPlayers((prevPlayers) =>
+      prevPlayers.map((player, index) => {
+        if (index === playerIndex) {
+          return { ...player, cards: [...player.cards, drawnCard] };
+        }
+        return player;
+      })
+    );
+  };
+
+  const playCard = (playerIndex, cardToPlayId) => {
+    const [[cardToPlay], remainingCards] = players[playerIndex].cards.reduce(
+      ([match, notMatch], card) => {
+        if (card.id === cardToPlayId) {
+          match.push(card);
+        } else {
+          notMatch.push(card);
+        }
+        return [match, notMatch];
+      },
+      [[], []] // Initialize the two arrays
+    );
+
+    const lastNumberInPlayedStack =
+      playedCards[cardToPlay.color].length > 0
+        ? playedCards[cardToPlay.color].at(-1)
+        : 0;
+    if (lastNumberInPlayedStack === cardToPlay.number - 1) {
+      // VALID PLAYABLE CARD
+      setPlayedCards((prevPlayedCardsObj) => {
+        return {
+          ...prevPlayedCardsObj,
+          [cardToPlay.color]: [
+            ...prevPlayedCardsObj[cardToPlay.color],
+            cardToPlay.number,
+          ],
+        };
+      });
+
+      // DROP CARD FROM PLAYER HAND
+      setPlayers((prevPlayers) =>
+        prevPlayers.map((player, index) =>
+          index === playerIndex ? { ...player, cards: remainingCards } : player
+        )
+      );
+
+      // DRAW NEW CARD FOR PLAYER
+      drawCardForPlayer(playerIndex);
+    } else {
+      // INVALID NON-PLAYABLE CARD :(
+      throwNotImplementedException();
+    }
   };
   //#endregion
 
