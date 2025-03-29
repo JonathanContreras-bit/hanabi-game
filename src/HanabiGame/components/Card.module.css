@@ -7,3 +7,11 @@
   font-size: xx-large;
   border: 1px black solid;
 }
+
+.actionableCard {
+  composes: card;
+}
+
+.actionableCard:hover {
+  border: 2px red solid;
+}

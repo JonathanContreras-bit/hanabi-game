@@ -25,7 +25,7 @@ const numberFrequencies = {
 };
 const playWithRainbowInd = false;
 const timeTokensNum = 8;
-const playerNames = ["Jonny", "Marcel", "Elisa"];
+const playerNames = ["Jonny", "Marcel", "Dakota"];
 //#endregion
 
 // #region Stateless functions
@@ -261,7 +261,12 @@ const Gameboard = () => {
 
   return (
     <div className={styles.gameboard}>
-      <PlayersSection players={players} playerTurn={playerTurn} />
+      <PlayersSection
+        players={players}
+        playerTurn={playerTurn}
+        handlePlayCard={playCard}
+        handleDiscardCard={discardCard}
+      />
       <button hidden={playerTurn >= 0} onClick={handleStart}>
         Start
       </button>
@@ -282,7 +287,7 @@ const Gameboard = () => {
       <ExplosionSection explosionCount={explosionCount} />
       {_debugMode &&
         _allCards.map((stack) => {
-          return <CardRow cards={stack} _myturn={false} />;
+          return <CardRow key={stack[0].color} cards={stack} _myturn={false} />;
         })}
       <button
         onClick={() => {
