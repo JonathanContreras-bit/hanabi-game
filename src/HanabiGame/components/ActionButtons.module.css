@@ -1,0 +1,11 @@
+.actions {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+}
+
+.gridContainer {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr); /* 5 columns */
+}

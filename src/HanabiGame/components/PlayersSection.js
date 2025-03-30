@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import styles from "HanabiGame/components/PlayersSection.module.css";
 import Player from "HanabiGame/components/Player";
 
@@ -7,7 +7,25 @@ const PlayersSection = ({
   playerTurn,
   handlePlayCard,
   handleDiscardCard,
+  handleCommunicateInfo,
+  colors,
+  numbers,
 }) => {
+  const [isCommunicatingInd, setIsCommunicatingInd] = useState(false);
+  const [informationObj, setInformationObj] = useState({});
+
+  const toggleCommunicatingState = () => {
+    setIsCommunicatingInd((prev) => !prev);
+  };
+
+  const handleInfoSelection = (informationObject) => {
+    setInformationObj(informationObject);
+  };
+
+  const handlePlayerSelection = (selectedPlayerIndex) => {
+    handleCommunicateInfo(selectedPlayerIndex, informationObj);
+  };
+
   return (
     <div className={styles.playersSection}>
       {players.map((player, index) => (
@@ -22,6 +40,14 @@ const PlayersSection = ({
           handleDiscardCard={(cardId) => {
             handleDiscardCard(index, cardId);
           }}
+          isCommunicatingInd={isCommunicatingInd}
+          toggleCommunicatingState={toggleCommunicatingState}
+          colors={colors}
+          numbers={numbers}
+          handlePlayerSelection={() => {
+            handlePlayerSelection(index);
+          }}
+          handleInfoSelection={handleInfoSelection}
         />
       ))}
     </div>

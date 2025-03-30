@@ -1,11 +1,12 @@
 import React from "react";
 import styles from "HanabiGame/components/Card.module.css";
 
-const Card = ({ color, number, inActionInd }) => {
+const Card = ({ color, number, choosingCardInd, handleSelectCard }) => {
   return (
     <div
-      className={inActionInd ? styles.actionableCard : styles.card}
+      className={choosingCardInd ? styles.actionableCard : styles.card}
       style={{ background: `${color}` }}
+      onClick={handleSelectCard}
     >
       {number}
     </div>

@@ -2,7 +2,7 @@ import React from "react";
 import styles from "HanabiGame/components/CardRow.module.css";
 import Card from "HanabiGame/components/Card";
 
-const CardRow = ({ cards, _myturn, inActionInd }) => {
+const CardRow = ({ cards, _myturn, choosingCardInd, selectCard }) => {
   return (
     <div className={styles.row}>
       {cards.map((card) => (
@@ -14,7 +14,10 @@ const CardRow = ({ cards, _myturn, inActionInd }) => {
               ? card.number
               : card.believedNumber > 0 && card.believedNumber
           }
-          inActionInd={inActionInd}
+          choosingCardInd={choosingCardInd}
+          handleSelectCard={() => {
+            selectCard(card.id);
+          }}
         />
       ))}
     </div>

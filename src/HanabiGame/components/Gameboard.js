@@ -179,6 +179,7 @@ const Gameboard = () => {
   };
 
   const playCard = (playerIndex, cardToPlayId) => {
+    console.log("confirmed attempted to play card");
     const [[cardToPlay], remainingCards] = extractCardFromPlayer(
       playerIndex,
       cardToPlayId
@@ -257,6 +258,38 @@ const Gameboard = () => {
       )
     );
   };
+
+  const handleCommunicateInfo = (playerIndex, informationObj) => {
+    if (informationObj.hasOwnProperty("color")) {
+      setPlayers((prevPlayers) =>
+        prevPlayers.map((prevPlayer, index) => {
+          if (playerIndex === index) {
+            const informedCards = prevPlayer.cards.map((card) =>
+              card.color === informationObj.color
+                ? { ...card, believedColor: informationObj.color }
+                : card
+            );
+            return { ...prevPlayer, cards: informedCards };
+          }
+          return prevPlayer;
+        })
+      );
+    } else if (informationObj.hasOwnProperty("number")) {
+      setPlayers((prevPlayers) =>
+        prevPlayers.map((prevPlayer, index) => {
+          if (playerIndex === index) {
+            const informedCards = prevPlayer.cards.map((card) =>
+              card.number === informationObj.number
+                ? { ...card, believedNumber: informationObj.number }
+                : card
+            );
+            return { ...prevPlayer, cards: informedCards };
+          }
+          return prevPlayer;
+        })
+      );
+    }
+  };
   //#endregion
 
   return (
@@ -266,6 +299,9 @@ const Gameboard = () => {
         playerTurn={playerTurn}
         handlePlayCard={playCard}
         handleDiscardCard={discardCard}
+        handleCommunicateInfo={handleCommunicateInfo}
+        colors={Object.values(cardColors)}
+        numbers={Object.keys(numberFrequencies)}
       />
       <button hidden={playerTurn >= 0} onClick={handleStart}>
         Start
