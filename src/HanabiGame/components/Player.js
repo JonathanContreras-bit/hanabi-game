@@ -46,12 +46,16 @@ const Player = ({
       className={
         !isCommunicatingInd || _myturn ? styles.player : styles.choosingPlayer
       }
-      onClick={handlePlayerSelection}
+      onClick={() => {
+        if (isCommunicatingInd) {
+          handlePlayerSelection();
+        }
+      }}
     >
       <p style={{ color: _myturn && "red" }}>{name}</p>
       <CardRow
         cards={cards}
-        _myturn={_myturn}
+        _myturn={_myturn && false}
         choosingCardInd={choosingCardInd}
         selectCard={handleSelectCard}
       />

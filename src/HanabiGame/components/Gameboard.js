@@ -4,6 +4,7 @@ import PlayersSection from "HanabiGame/components/PlayersSection";
 import styles from "HanabiGame/components/Gameboard.module.css";
 import TimeTokensSection from "HanabiGame/components/TimeTokensSection";
 import ExplosionSection from "HanabiGame/components/ExplosionSection";
+import CardsSection from "HanabiGame/components/CardsSection";
 
 // #region GAME CONFIGS
 const cardColors = {
@@ -47,7 +48,7 @@ const visualizeAllCards = () =>
     const colorCardStack = [];
     Object.entries(numberFrequencies).forEach(([number, frequency]) => {
       for (let i = 1; i <= frequency; i++) {
-        colorCardStack.push(createCard(color, number, i));
+        colorCardStack.push(createCard(color, parseInt(number), i));
       }
     });
     return colorCardStack;
@@ -75,6 +76,9 @@ const initializeDiscardedCards = () =>
     acc[number] = [];
     return acc;
   }, {});
+
+const getPopulatedStacks = (nestedStacks) =>
+  nestedStacks.filter((stack) => stack.length);
 
 const computeDecision = (
   myCards,
@@ -147,7 +151,7 @@ const Gameboard = () => {
   };
 
   const nextPlayerTurn = () => {
-    setPlayerTurn((prev) => (prev % 3) + 1);
+    setPlayerTurn((prev) => (prev == players.length - 1 ? 0 : prev + 1));
   };
 
   const handleStart = () => {
@@ -179,7 +183,6 @@ const Gameboard = () => {
   };
 
   const playCard = (playerIndex, cardToPlayId) => {
-    console.log("confirmed attempted to play card");
     const [[cardToPlay], remainingCards] = extractCardFromPlayer(
       playerIndex,
       cardToPlayId
@@ -187,7 +190,7 @@ const Gameboard = () => {
 
     const lastNumberInPlayedStack =
       playedCards[cardToPlay.color].length > 0
-        ? playedCards[cardToPlay.color].at(-1)
+        ? playedCards[cardToPlay.color].at(-1).number
         : 0;
     if (lastNumberInPlayedStack === cardToPlay.number - 1) {
       // PLAY THE CARD
@@ -196,7 +199,7 @@ const Gameboard = () => {
           ...prevPlayedCardsObj,
           [cardToPlay.color]: [
             ...prevPlayedCardsObj[cardToPlay.color],
-            cardToPlay.number,
+            cardToPlay,
           ],
         };
       });
@@ -210,6 +213,7 @@ const Gameboard = () => {
       // INVALID NON-PLAYABLE CARD :(
       setExplosionCount((prev) => prev + 1);
     }
+    nextPlayerTurn();
   };
 
   const extractCardFromPlayer = (playerIndex, cardToMatchId) => {
@@ -249,6 +253,8 @@ const Gameboard = () => {
 
     // DRAW NEW CARD FOR PLAYER
     drawCardForPlayer(playerIndex);
+
+    nextPlayerTurn();
   };
 
   const setPlayerIndexCards = (playerIndex, playersCards) => {
@@ -289,6 +295,7 @@ const Gameboard = () => {
         })
       );
     }
+    nextPlayerTurn();
   };
   //#endregion
 
@@ -306,6 +313,10 @@ const Gameboard = () => {
       <button hidden={playerTurn >= 0} onClick={handleStart}>
         Start
       </button>
+      <CardsSection
+        playedCardsStacks={getPopulatedStacks(Object.values(playedCards))}
+        sectionType={0}
+      />
       <button
         hidden={playerTurn < 0}
         onClick={() => {
@@ -322,7 +333,7 @@ const Gameboard = () => {
       <TimeTokensSection timeTokenCount={timeTokenCount} />
       <ExplosionSection explosionCount={explosionCount} />
       {_debugMode &&
-        _allCards.map((stack) => {
+        getPopulatedStacks(_allCards).map((stack) => {
           return <CardRow key={stack[0].color} cards={stack} _myturn={false} />;
         })}
       <button
