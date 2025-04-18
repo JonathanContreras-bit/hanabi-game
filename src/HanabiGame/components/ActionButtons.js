@@ -28,7 +28,7 @@ const ActionButtons = ({
           <button
             key={color}
             onClick={() => {
-              handleInfoSelection({ color: { color } });
+              handleInfoSelection({ color });
             }}
             style={{ width: "100%" }}
           >
@@ -39,7 +39,7 @@ const ActionButtons = ({
           <button
             key={number}
             onClick={() => {
-              handleInfoSelection({ number: { number } });
+              handleInfoSelection({ number });
             }}
             style={{ width: "100%" }}
           >

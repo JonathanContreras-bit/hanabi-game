@@ -308,7 +308,9 @@ const Gameboard = () => {
         handleDiscardCard={discardCard}
         handleCommunicateInfo={handleCommunicateInfo}
         colors={Object.values(cardColors)}
-        numbers={Object.keys(numberFrequencies)}
+        numbers={Object.keys(numberFrequencies).map((numStr) =>
+          parseInt(numStr)
+        )}
       />
       <button hidden={playerTurn >= 0} onClick={handleStart}>
         Start
