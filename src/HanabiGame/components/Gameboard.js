@@ -243,7 +243,7 @@ const Gameboard = () => {
         ...prevDiscardedObj,
         [cardToDiscard.number]: [
           ...prevDiscardedObj[cardToDiscard.number],
-          cardToDiscard.color,
+          cardToDiscard,
         ],
       };
     });
@@ -316,6 +316,10 @@ const Gameboard = () => {
       <CardsSection
         playedCardsStacks={getPopulatedStacks(Object.values(playedCards))}
         sectionType={0}
+      />
+      <CardsSection
+        playedCardsStacks={getPopulatedStacks(Object.values(discardedCards))}
+        sectionType={1}
       />
       <button
         hidden={playerTurn < 0}

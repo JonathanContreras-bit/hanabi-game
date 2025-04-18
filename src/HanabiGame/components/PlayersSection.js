@@ -12,18 +12,9 @@ const PlayersSection = ({
   numbers,
 }) => {
   const [isCommunicatingInd, setIsCommunicatingInd] = useState(false);
-  const [informationObj, setInformationObj] = useState({});
 
   const toggleCommunicatingState = () => {
     setIsCommunicatingInd((prev) => !prev);
-  };
-
-  const handleInfoSelection = (informationObject) => {
-    setInformationObj(informationObject);
-  };
-
-  const handlePlayerSelection = (selectedPlayerIndex) => {
-    handleCommunicateInfo(selectedPlayerIndex, informationObj);
   };
 
   return (
@@ -44,10 +35,10 @@ const PlayersSection = ({
           toggleCommunicatingState={toggleCommunicatingState}
           colors={colors}
           numbers={numbers}
-          handlePlayerSelection={() => {
-            handlePlayerSelection(index);
+          handleInfoSelection={(informationObj) => {
+            handleCommunicateInfo(index, informationObj);
+            toggleCommunicatingState();
           }}
-          handleInfoSelection={handleInfoSelection}
         />
       ))}
     </div>

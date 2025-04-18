@@ -4,11 +4,3 @@
   border: 1px solid black;
   align-items: center;
 }
-
-.choosingPlayer {
-  composes: player;
-}
-
-.choosingPlayer:hover {
-  border: 2px solid red;
-}

@@ -13,7 +13,6 @@ const Player = ({
   toggleCommunicatingState,
   colors,
   numbers,
-  handlePlayerSelection,
   handleInfoSelection,
 }) => {
   const [isPlayingInd, setIsPlayingInd] = useState(false);
@@ -42,24 +41,16 @@ const Player = ({
   const choosingCardInd = isPlayingInd || isDiscardingInd;
 
   return (
-    <div
-      className={
-        !isCommunicatingInd || _myturn ? styles.player : styles.choosingPlayer
-      }
-      onClick={() => {
-        if (isCommunicatingInd) {
-          handlePlayerSelection();
-        }
-      }}
-    >
+    <div className={styles.player}>
       <p style={{ color: _myturn && "red" }}>{name}</p>
       <CardRow
         cards={cards}
-        _myturn={_myturn && false}
+        _myturn={_myturn}
         choosingCardInd={choosingCardInd}
         selectCard={handleSelectCard}
       />
-      {_myturn && (
+      {((_myturn && !isCommunicatingInd) ||
+        (!_myturn && isCommunicatingInd)) && (
         <ActionButtons
           choosingCardInd={choosingCardInd}
           isCommunicatingInd={isCommunicatingInd}
