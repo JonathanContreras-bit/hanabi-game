@@ -2,7 +2,9 @@ import React from "react";
 import styles from "HanabiGame/components/ActionButtons.module.css";
 
 const ActionButtons = ({
-  choosingCardInd,
+  _myturn,
+  isPlayingInd,
+  isDiscardingInd,
   isCommunicatingInd,
   togglePlayingState,
   toggleDiscardingState,
@@ -10,15 +12,34 @@ const ActionButtons = ({
   colors,
   numbers,
   handleInfoSelection,
+  timeTokenCount,
 }) => {
-  if (!(choosingCardInd || isCommunicatingInd)) {
-    return (
-      <div className={styles.actions}>
-        <button onClick={togglePlayingState}>Play</button>
-        <button onClick={toggleDiscardingState}>Discard</button>
-        <button onClick={toggleCommunicatingState}>Communicate</button>
-      </div>
-    );
+  const choosingCardInd = isPlayingInd || isDiscardingInd;
+
+  const handleBackButton = () => {
+    if (isPlayingInd) {
+      togglePlayingState();
+    } else if (isDiscardingInd) {
+      toggleDiscardingState();
+    } else if (isCommunicatingInd) {
+      toggleCommunicatingState();
+    }
+  };
+
+  if (_myturn) {
+    if (!(choosingCardInd || isCommunicatingInd)) {
+      return (
+        <div className={styles.actions}>
+          <button onClick={togglePlayingState}>Play</button>
+          <button onClick={toggleDiscardingState}>Discard</button>
+          {timeTokenCount > 0 && (
+            <button onClick={toggleCommunicatingState}>Communicate</button>
+          )}
+        </div>
+      );
+    } else {
+      return <button onClick={handleBackButton}>Back</button>;
+    }
   }
 
   if (isCommunicatingInd) {

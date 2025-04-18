@@ -14,6 +14,7 @@ const Player = ({
   colors,
   numbers,
   handleInfoSelection,
+  timeTokenCount,
 }) => {
   const [isPlayingInd, setIsPlayingInd] = useState(false);
   const [isDiscardingInd, setIsDiscardingInd] = useState(false);
@@ -48,11 +49,13 @@ const Player = ({
         _myturn={_myturn}
         choosingCardInd={choosingCardInd}
         selectCard={handleSelectCard}
+        isDiscardingInd={isDiscardingInd}
       />
-      {((_myturn && !isCommunicatingInd) ||
-        (!_myturn && isCommunicatingInd)) && (
+      {(_myturn || (!_myturn && isCommunicatingInd)) && (
         <ActionButtons
-          choosingCardInd={choosingCardInd}
+          _myturn={_myturn}
+          isPlayingInd={isPlayingInd}
+          isDiscardingInd={isDiscardingInd}
           isCommunicatingInd={isCommunicatingInd}
           togglePlayingState={togglePlayingState}
           toggleDiscardingState={toggleDiscardingState}
@@ -60,6 +63,7 @@ const Player = ({
           colors={colors}
           numbers={numbers}
           handleInfoSelection={handleInfoSelection}
+          timeTokenCount={timeTokenCount}
         />
       )}
     </div>

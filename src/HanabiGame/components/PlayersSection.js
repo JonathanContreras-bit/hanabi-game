@@ -10,6 +10,7 @@ const PlayersSection = ({
   handleCommunicateInfo,
   colors,
   numbers,
+  timeTokenCount,
 }) => {
   const [isCommunicatingInd, setIsCommunicatingInd] = useState(false);
 
@@ -39,6 +40,7 @@ const PlayersSection = ({
             handleCommunicateInfo(index, informationObj);
             toggleCommunicatingState();
           }}
+          timeTokenCount={timeTokenCount}
         />
       ))}
     </div>

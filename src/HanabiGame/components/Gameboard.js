@@ -16,7 +16,7 @@ const cardColors = {
   // RAINBOW:
   //   "linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet)",
 };
-const defaultUnknownCardColor = "grey";
+const defaultUnknownCardColor = ""; // TODO: remove this, not useful
 const numberFrequencies = {
   1: 3,
   2: 2,
@@ -24,6 +24,11 @@ const numberFrequencies = {
   4: 2,
   5: 1,
 };
+const numbers = Object.keys(numberFrequencies).map((numStr) =>
+  parseInt(numStr)
+);
+numbers.sort();
+const maxNumber = numbers.at(-1);
 const playWithRainbowInd = false;
 const timeTokensNum = 8;
 const playerNames = ["Jonny", "Marcel", "Dakota"];
@@ -46,9 +51,10 @@ const createPlayer = (inpName, inpCards) => {
 const visualizeAllCards = () =>
   Object.values(cardColors).map((color) => {
     const colorCardStack = [];
-    Object.entries(numberFrequencies).forEach(([number, frequency]) => {
-      for (let i = 1; i <= frequency; i++) {
-        colorCardStack.push(createCard(color, parseInt(number), i));
+    numbers.forEach((number) => {
+      const numberFrequency = numberFrequencies[number];
+      for (let i = 1; i <= numberFrequency; i++) {
+        colorCardStack.push(createCard(color, number, i));
       }
     });
     return colorCardStack;
@@ -150,6 +156,14 @@ const Gameboard = () => {
     return widthdrawnCards;
   };
 
+  const decrementTimeTokens = () => {
+    setTimeTokensCount((prev) => prev - 1);
+  };
+
+  const incrementTimeTokens = () => {
+    setTimeTokensCount((prev) => (prev === timeTokensNum ? prev : prev + 1));
+  };
+
   const nextPlayerTurn = () => {
     setPlayerTurn((prev) => (prev == players.length - 1 ? 0 : prev + 1));
   };
@@ -209,6 +223,10 @@ const Gameboard = () => {
 
       // DRAW NEW CARD FOR PLAYER
       drawCardForPlayer(playerIndex);
+
+      if (cardToPlay.number === maxNumber) {
+        incrementTimeTokens();
+      }
     } else {
       // INVALID NON-PLAYABLE CARD :(
       setExplosionCount((prev) => prev + 1);
@@ -254,6 +272,7 @@ const Gameboard = () => {
     // DRAW NEW CARD FOR PLAYER
     drawCardForPlayer(playerIndex);
 
+    incrementTimeTokens();
     nextPlayerTurn();
   };
 
@@ -295,6 +314,7 @@ const Gameboard = () => {
         })
       );
     }
+    decrementTimeTokens();
     nextPlayerTurn();
   };
   //#endregion
@@ -311,6 +331,7 @@ const Gameboard = () => {
         numbers={Object.keys(numberFrequencies).map((numStr) =>
           parseInt(numStr)
         )}
+        timeTokenCount={timeTokenCount}
       />
       <button hidden={playerTurn >= 0} onClick={handleStart}>
         Start
