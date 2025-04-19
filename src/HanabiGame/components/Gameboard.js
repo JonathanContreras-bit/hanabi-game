@@ -28,13 +28,15 @@ const numbers = Object.keys(numberFrequencies).map((numStr) =>
   parseInt(numStr)
 );
 numbers.sort();
-const maxNumber = numbers.at(-1);
 const playWithRainbowInd = false;
 const timeTokensNum = 8;
 const playerNames = ["Jonny", "Marcel", "Dakota"];
 //#endregion
 
-// #region Stateless functions
+// #region Stateless functions/constants
+const maxNumber = numbers.at(-1);
+const failingIndex = -1;
+
 const createCard = (inpColor, inpNumber, freqI) => {
   return {
     id: `${inpColor}-${inpNumber}-${freqI}`,
@@ -86,31 +88,137 @@ const initializeDiscardedCards = () =>
 const getPopulatedStacks = (nestedStacks) =>
   nestedStacks.filter((stack) => stack.length);
 
+const getImmediatelyPlayableNumbers = (playedCards) => {
+  const nextPlayableNumbers = Object.values(playedCards).map((colorStack) =>
+    colorStack.length ? colorStack.at(-1).number + 1 : 1
+  );
+  return nextPlayableNumbers;
+};
+
+const communicateIdk = () => {
+  console.log("I don't know what to do here...");
+};
+
+const getLongestNestedArrayIndex = (twoDimArr) => {
+  const nestedArrLengths = twoDimArr.map((nestedArr) => nestedArr.length);
+  let maxLength = failingIndex;
+  nestedArrLengths.forEach((nestedArrLength) => {
+    if (nestedArrLength && nestedArrLength > maxLength) {
+      maxLength = nestedArrLength;
+    }
+  });
+
+  // if (maxLength !== failingIndex) {
+  return nestedArrLengths.findIndex((length) => length === maxLength);
+  // }
+};
+
+const cardsLogicallyEqual = (card1, card2) => {
+  return card1.color === card2.color && card1.number === card2.number;
+};
+
+const getNonConflictingCardProperty = (
+  cardStack,
+  allCardsInPlayerHand,
+  property
+) => {
+  return cardStack
+    .map((card) => card[property])
+    .find((prop) =>
+      allCardsInPlayerHand
+        .filter((card) => card[property] === prop)
+        .every((matchingPropCardInHand) =>
+          cardStack.some((card) =>
+            cardsLogicallyEqual(card, matchingPropCardInHand)
+          )
+        )
+    );
+};
+
+const getSensibleInfoToShare = (
+  unknownPlayableCardsInPlayerHand,
+  allCardsInPlayerHand
+) => {
+  const nonConflictingPlayableNumber = getNonConflictingCardProperty(
+    unknownPlayableCardsInPlayerHand,
+    allCardsInPlayerHand,
+    "number"
+  );
+  if (nonConflictingPlayableNumber) {
+    return nonConflictingPlayableNumber;
+  } else {
+    const nonConflictingPlayableColor = getNonConflictingCardProperty(
+      unknownPlayableCardsInPlayerHand,
+      allCardsInPlayerHand,
+      "color"
+    );
+    if (nonConflictingPlayableColor) {
+      return nonConflictingPlayableColor;
+    }
+  }
+  return unknownPlayableCardsInPlayerHand[0].number;
+};
+
 const computeDecision = (
   myCards,
-  orderedOtherPlayersCards,
+  orderedOtherPlayers,
   playedCards,
   discardedCards
 ) => {
-  const believedInformationInHand = myCards.map((card) => {
-    let believedCardColor = "";
-    let believedCardNumber = "";
+  const myBelievedNumbers = myCards
+    .filter((card) => card.believedNumber)
+    .map((card) => card.believedNumber);
 
-    if (card.believedColor !== defaultUnknownCardColor) {
-      const { believedColor } = card;
-      believedCardColor = believedColor;
+  if (myBelievedNumbers.length) {
+    const immediatelyPlayableNumbers = getImmediatelyPlayableNumbers(
+      playedCards
+    );
+
+    const somePlayableNumber = myBelievedNumbers.find((myNum) =>
+      immediatelyPlayableNumbers.some(
+        (immediatelyPlayableNumber) => immediatelyPlayableNumber === myNum
+      )
+    );
+
+    if (somePlayableNumber) {
+      console.log(`I should play any ${somePlayableNumber} that I have`);
+    } else {
+      communicateIdk();
     }
-    if (card.believedNumber) {
-      const { believedNumber } = card;
-      believedCardNumber = believedNumber;
+  } else {
+    const orderedOtherPlayersPlayableUnknownCards = orderedOtherPlayers.map(
+      (otherPlayer) => {
+        return otherPlayer.cards
+          .filter((card) => {
+            if (playedCards[card.color].length) {
+              return playedCards[card.color].at(-1).number === card.number - 1;
+            } else {
+              return card.number === 1;
+            }
+          })
+          .filter((card) => !(card.believedNumber || card.believedColor));
+      }
+    );
+
+    const indexOfOtherPlayerWithMostPlayableCards = getLongestNestedArrayIndex(
+      orderedOtherPlayersPlayableUnknownCards
+    );
+
+    if (indexOfOtherPlayerWithMostPlayableCards !== failingIndex) {
+      console.log(
+        `I'm going to tell ${
+          orderedOtherPlayers[indexOfOtherPlayerWithMostPlayableCards].name
+        } about their ${getSensibleInfoToShare(
+          orderedOtherPlayersPlayableUnknownCards[
+            indexOfOtherPlayerWithMostPlayableCards
+          ],
+          orderedOtherPlayers[indexOfOtherPlayerWithMostPlayableCards].cards
+        )}s`
+      );
+    } else {
+      communicateIdk();
     }
-    return believedCardColor || believedCardNumber
-      ? { believedCardColor, believedCardNumber }
-      : {};
-  });
-  console.log(
-    `What do I know about my hand? ${JSON.stringify(believedInformationInHand)}`
-  );
+  }
 };
 
 const throwNotImplementedException = () => {
@@ -165,7 +273,7 @@ const Gameboard = () => {
   };
 
   const nextPlayerTurn = () => {
-    setPlayerTurn((prev) => (prev == players.length - 1 ? 0 : prev + 1));
+    setPlayerTurn((prev) => (prev === players.length - 1 ? 0 : prev + 1));
   };
 
   const handleStart = () => {
