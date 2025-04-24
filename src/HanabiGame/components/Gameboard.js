@@ -37,6 +37,14 @@ const playerNames = ["Jonny", "Marcel", "Dakota"];
 const maxNumber = numbers.at(-1);
 const failingIndex = -1;
 
+const communicateIdk = () => {
+  console.log("Not sure. Try discarding oldest unknown card?");
+};
+
+const communicatePlayNumber = (inpNumber) => {
+  console.log(`I should play any ${inpNumber} that I have`);
+};
+
 const createCard = (inpColor, inpNumber, freqI) => {
   return {
     id: `${inpColor}-${inpNumber}-${freqI}`,
@@ -93,10 +101,6 @@ const getImmediatelyPlayableNumbers = (playedCards) => {
     colorStack.length ? colorStack.at(-1).number + 1 : 1
   );
   return nextPlayableNumbers;
-};
-
-const communicateIdk = () => {
-  console.log("I don't know what to do here...");
 };
 
 const getLongestNestedArrayIndex = (twoDimArr) => {
@@ -156,7 +160,47 @@ const getSensibleInfoToShare = (
       return nonConflictingPlayableColor;
     }
   }
-  return unknownPlayableCardsInPlayerHand[0].number;
+  communicateIdk();
+};
+
+const getBelievedCardNumbersArr = (cards) => {
+  return cards
+    .filter((card) => card.believedNumber)
+    .map((card) => card.believedNumber);
+};
+
+const getFirstMatchingElement = (arr1, arr2) => {
+  return arr1.find((arr1Ele) => arr2.some((arr2Ele) => arr2Ele === arr1Ele));
+};
+
+const playerHasDuplicateOfPotentiallyKnownCard = (
+  potentiallyKnownCard,
+  playerCards
+) => {};
+
+const getOrderedOtherPlayersPlayableUnknownCards = (
+  orderedOtherPlayers,
+  playedCards
+) => {
+  return orderedOtherPlayers.map((otherPlayer) => {
+    const otherPlayerPlayableCards = otherPlayer.cards.filter((card) => {
+      if (playedCards[card.color].length) {
+        return playedCards[card.color].at(-1).number === card.number - 1;
+      } else {
+        return card.number === 1;
+      }
+    });
+
+    const otherPlayerAdjustedPlayableCards = otherPlayerPlayableCards.filter(
+      (card) =>
+        !(card.believedNumber || card.believedColor) &&
+        !otherPlayer.cards.some((otherPlayerCard) =>
+          cardsLogicallyEqual(otherPlayerCard, card)
+        )
+    );
+
+    return otherPlayerAdjustedPlayableCards;
+  });
 };
 
 const computeDecision = (
@@ -165,39 +209,27 @@ const computeDecision = (
   playedCards,
   discardedCards
 ) => {
-  const myBelievedNumbers = myCards
-    .filter((card) => card.believedNumber)
-    .map((card) => card.believedNumber);
+  const myBelievedNumbers = getBelievedCardNumbersArr(myCards);
 
   if (myBelievedNumbers.length) {
     const immediatelyPlayableNumbers = getImmediatelyPlayableNumbers(
       playedCards
     );
 
-    const somePlayableNumber = myBelievedNumbers.find((myNum) =>
-      immediatelyPlayableNumbers.some(
-        (immediatelyPlayableNumber) => immediatelyPlayableNumber === myNum
-      )
+    const somePlayableNumber = getFirstMatchingElement(
+      myBelievedNumbers,
+      immediatelyPlayableNumbers
     );
 
     if (somePlayableNumber) {
-      console.log(`I should play any ${somePlayableNumber} that I have`);
+      communicatePlayNumber(somePlayableNumber);
     } else {
       communicateIdk();
     }
   } else {
-    const orderedOtherPlayersPlayableUnknownCards = orderedOtherPlayers.map(
-      (otherPlayer) => {
-        return otherPlayer.cards
-          .filter((card) => {
-            if (playedCards[card.color].length) {
-              return playedCards[card.color].at(-1).number === card.number - 1;
-            } else {
-              return card.number === 1;
-            }
-          })
-          .filter((card) => !(card.believedNumber || card.believedColor));
-      }
+    const orderedOtherPlayersPlayableUnknownCards = getOrderedOtherPlayersPlayableUnknownCards(
+      orderedOtherPlayers,
+      playedCards
     );
 
     const indexOfOtherPlayerWithMostPlayableCards = getLongestNestedArrayIndex(
@@ -205,18 +237,37 @@ const computeDecision = (
     );
 
     if (indexOfOtherPlayerWithMostPlayableCards !== failingIndex) {
-      console.log(
-        `I'm going to tell ${
-          orderedOtherPlayers[indexOfOtherPlayerWithMostPlayableCards].name
-        } about their ${getSensibleInfoToShare(
+      logMove(
+        orderedOtherPlayers[indexOfOtherPlayerWithMostPlayableCards].name,
+        getSensibleInfoToShare(
           orderedOtherPlayersPlayableUnknownCards[
             indexOfOtherPlayerWithMostPlayableCards
           ],
           orderedOtherPlayers[indexOfOtherPlayerWithMostPlayableCards].cards
-        )}s`
+        )
       );
     } else {
-      communicateIdk();
+      const orderedOtherPlayersUnknown5s = orderedOtherPlayers.map(
+        (otherPlayer) =>
+          otherPlayer.cards.filter(
+            (card) => card.number === maxNumber && !card.believedNumber
+          )
+      );
+
+      const indexOfOtherPlayerWithUnknown5s = getLongestNestedArrayIndex(
+        orderedOtherPlayersUnknown5s
+      );
+      if (indexOfOtherPlayerWithUnknown5s !== failingIndex) {
+        logMove(
+          orderedOtherPlayers[indexOfOtherPlayerWithUnknown5s].name,
+          getSensibleInfoToShare(
+            orderedOtherPlayersUnknown5s[indexOfOtherPlayerWithUnknown5s],
+            orderedOtherPlayers[indexOfOtherPlayerWithUnknown5s].cards
+          )
+        );
+      } else {
+        communicateIdk();
+      }
     }
   }
 };
@@ -225,6 +276,10 @@ const throwNotImplementedException = () => {
   throw new Error(
     "NotImplementedException: This functionality is not yet implemented."
   );
+};
+
+const logMove = (playerName, information) => {
+  console.log(`I'm going to tell ${playerName} about their ${information}s`);
 };
 //#endregion
 
