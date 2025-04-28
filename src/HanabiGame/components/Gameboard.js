@@ -173,34 +173,107 @@ const getFirstMatchingElement = (arr1, arr2) => {
   return arr1.find((arr1Ele) => arr2.some((arr2Ele) => arr2Ele === arr1Ele));
 };
 
+const isSameExactCard = (card1, card2) => card1.id === card2.id;
+
 const playerHasDuplicateOfPotentiallyKnownCard = (
   potentiallyKnownCard,
-  playerCards
-) => {};
+  playablePlayerCards
+) =>
+  playablePlayerCards.some(
+    (card) =>
+      !isSameExactCard(card, potentiallyKnownCard) &&
+      cardsLogicallyEqual(card, potentiallyKnownCard)
+  );
+
+const cardIsCompleteUnknown = (card) =>
+  !(card.believedColor || card.believedNumber);
+
+const cardIsPlayable = (card, playedCards) => {
+  if (playedCards[card.color].length) {
+    return playedCards[card.color].at(-1).number === card.number - 1;
+  } else {
+    return card.number === 1;
+  }
+};
 
 const getOrderedOtherPlayersPlayableUnknownCards = (
   orderedOtherPlayers,
   playedCards
 ) => {
   return orderedOtherPlayers.map((otherPlayer) => {
-    const otherPlayerPlayableCards = otherPlayer.cards.filter((card) => {
-      if (playedCards[card.color].length) {
-        return playedCards[card.color].at(-1).number === card.number - 1;
-      } else {
-        return card.number === 1;
-      }
-    });
+    const otherPlayerPlayableCards = otherPlayer.cards.filter(
+      (card) => cardIsCompleteUnknown(card) && cardIsPlayable(card, playedCards)
+    );
 
     const otherPlayerAdjustedPlayableCards = otherPlayerPlayableCards.filter(
       (card) =>
-        !(card.believedNumber || card.believedColor) &&
-        !otherPlayer.cards.some((otherPlayerCard) =>
-          cardsLogicallyEqual(otherPlayerCard, card)
+        !playerHasDuplicateOfPotentiallyKnownCard(
+          card,
+          otherPlayerPlayableCards
         )
     );
 
     return otherPlayerAdjustedPlayableCards;
   });
+};
+
+// JONNY COME BACK
+const getEarlierPlayerIndexWithImportantNextDiscardCard = (
+  playerIndexOfPotentialCommunication,
+  orderedOtherPlayers
+) => {
+  let rtnPlayerIndex = playerIndexOfPotentialCommunication;
+  for (let i = 0; i < playerIndexOfPotentialCommunication; i++) {
+    if (orderedOtherPlayers[i].cards[0].number === 5) {
+      rtnPlayerIndex = i;
+    }
+  }
+  return rtnPlayerIndex;
+};
+
+const considerOtherPlayersMoves = (orderedOtherPlayers, playedCards) => {
+  const orderedOtherPlayersPlayableUnknownCards = getOrderedOtherPlayersPlayableUnknownCards(
+    orderedOtherPlayers,
+    playedCards
+  );
+
+  const indexOfOtherPlayerWithMostPlayableCards = getLongestNestedArrayIndex(
+    orderedOtherPlayersPlayableUnknownCards
+  );
+
+  if (indexOfOtherPlayerWithMostPlayableCards !== failingIndex) {
+    logMove(
+      orderedOtherPlayers[indexOfOtherPlayerWithMostPlayableCards].name,
+      getSensibleInfoToShare(
+        orderedOtherPlayersPlayableUnknownCards[
+          indexOfOtherPlayerWithMostPlayableCards
+        ],
+        orderedOtherPlayers[indexOfOtherPlayerWithMostPlayableCards].cards
+      )
+    );
+  } else {
+    const orderedOtherPlayersUnknown5s = orderedOtherPlayers.map(
+      (otherPlayer) =>
+        otherPlayer.cards.filter(
+          (card) => card.number === maxNumber && !card.believedNumber
+        )
+    );
+
+    const indexOfOtherPlayerWithUnknown5s = getLongestNestedArrayIndex(
+      orderedOtherPlayersUnknown5s
+    );
+    if (indexOfOtherPlayerWithUnknown5s !== failingIndex) {
+      logMove(
+        orderedOtherPlayers[indexOfOtherPlayerWithUnknown5s].name,
+        getSensibleInfoToShare(
+          orderedOtherPlayersUnknown5s[indexOfOtherPlayerWithUnknown5s],
+          orderedOtherPlayers[indexOfOtherPlayerWithUnknown5s].cards
+        )
+      );
+    } else {
+      communicateIdk();
+    }
+  }
 };
 
 const computeDecision = (
@@ -224,51 +297,10 @@ const computeDecision = (
     if (somePlayableNumber) {
       communicatePlayNumber(somePlayableNumber);
     } else {
-      communicateIdk();
+      considerOtherPlayersMoves(orderedOtherPlayers, playedCards);
     }
   } else {
-    const orderedOtherPlayersPlayableUnknownCards = getOrderedOtherPlayersPlayableUnknownCards(
-      orderedOtherPlayers,
-      playedCards
-    );
-
-    const indexOfOtherPlayerWithMostPlayableCards = getLongestNestedArrayIndex(
-      orderedOtherPlayersPlayableUnknownCards
-    );
-
-    if (indexOfOtherPlayerWithMostPlayableCards !== failingIndex) {
-      logMove(
-        orderedOtherPlayers[indexOfOtherPlayerWithMostPlayableCards].name,
-        getSensibleInfoToShare(
-          orderedOtherPlayersPlayableUnknownCards[
-            indexOfOtherPlayerWithMostPlayableCards
-          ],
-          orderedOtherPlayers[indexOfOtherPlayerWithMostPlayableCards].cards
-        )
-      );
-    } else {
-      const orderedOtherPlayersUnknown5s = orderedOtherPlayers.map(
-        (otherPlayer) =>
-          otherPlayer.cards.filter(
-            (card) => card.number === maxNumber && !card.believedNumber
-          )
-      );
-
-      const indexOfOtherPlayerWithUnknown5s = getLongestNestedArrayIndex(
-        orderedOtherPlayersUnknown5s
-      );
-      if (indexOfOtherPlayerWithUnknown5s !== failingIndex) {
-        logMove(
-          orderedOtherPlayers[indexOfOtherPlayerWithUnknown5s].name,
-          getSensibleInfoToShare(
-            orderedOtherPlayersUnknown5s[indexOfOtherPlayerWithUnknown5s],
-            orderedOtherPlayers[indexOfOtherPlayerWithUnknown5s].cards
-          )
-        );
-      } else {
-        communicateIdk();
-      }
-    }
+    considerOtherPlayersMoves(orderedOtherPlayers, playedCards);
   }
 };
 
