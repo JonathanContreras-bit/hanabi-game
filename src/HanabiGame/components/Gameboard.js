@@ -200,21 +200,62 @@ const getOrderedOtherPlayersPlayableUnknownCards = (
   orderedOtherPlayers,
   playedCards
 ) => {
-  return orderedOtherPlayers.map((otherPlayer) => {
-    const otherPlayerPlayableCards = otherPlayer.cards.filter(
-      (card) => cardIsCompleteUnknown(card) && cardIsPlayable(card, playedCards)
-    );
+  // BEGIN
+  // get nested array of each players' playable cards
+  const orderedOtherPlayersPlayableCards = orderedOtherPlayers.map(
+    (otherPlayer) =>
+      otherPlayer.cards.filter((card) => cardIsPlayable(card, playedCards))
+  );
 
-    const otherPlayerAdjustedPlayableCards = otherPlayerPlayableCards.filter(
-      (card) =>
-        !playerHasDuplicateOfPotentiallyKnownCard(
-          card,
-          otherPlayerPlayableCards
-        )
-    );
+  // only choose the ones that are:
+  // 1. completely unknown to the player
+  const orderedOtherPlayersPlayableCards_CompleteUnknonwn = orderedOtherPlayersPlayableCards.map(
+    (cards) => cards.filter(cardIsCompleteUnknown)
+  );
+  // 2. not duplicates in their own hand
+  const orderedOtherPlayersPlayableCards_NotSelfDuplicates = orderedOtherPlayersPlayableCards_CompleteUnknonwn.map(
+    (cards, playerIndex) =>
+      cards.filter(
+        (card) =>
+          !playerHasDuplicateOfPotentiallyKnownCard(
+            card,
+            orderedOtherPlayersPlayableCards[playerIndex]
+          )
+      )
+  );
+  // 3. not duplicates of logically equivalent known cards in other players' hands
+  const orderedOtherPlayersPlayableCards_NotDuplicatesOfAnotherPlayersKnownCards = orderedOtherPlayersPlayableCards_NotSelfDuplicates.map(
+    (cards, playerIndex) =>
+      cards.filter(
+        (card) =>
+          !playerHasDuplicateOfPotentiallyKnownCard(
+            card,
+            orderedOtherPlayersPlayableCards
+              .filter((_, index) => index !== playerIndex)
+              .flat()
+              .filter((card) => !cardIsCompleteUnknown(card))
+          )
+      )
+  );
 
-    return otherPlayerAdjustedPlayableCards;
-  });
+  return orderedOtherPlayersPlayableCards_NotDuplicatesOfAnotherPlayersKnownCards;
+  // orderedOtherPlayers.map((otherPlayer) => {
+  //   // for a given player, get their cards that are playable and unkown to them
+  //   const otherPlayerPlayableCards = otherPlayer.cards.filter(
+  //     (card) => cardIsCompleteUnknown(card) && cardIsPlayable(card, playedCards)
+  //   );
+
+  //   const otherPlayerAdjustedPlayableCards = otherPlayerPlayableCards.filter(
+  //     (card) =>
+  //       // remove duplicates from same player's hand
+  //       !playerHasDuplicateOfPotentiallyKnownCard(
+  //         card,
+  //         otherPlayerPlayableCards
+  //       )
+  //   );
+
+  //   return otherPlayerAdjustedPlayableCards;
+  // });
 };
 
 // JONNY COME BACK
